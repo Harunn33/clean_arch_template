@@ -1,9 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:clean_arch_template/features/daily_news/data/models/article.dart';
 import 'package:clean_arch_template/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:clean_arch_template/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../domain/entities/article.dart';
+import '../../widgets/article_tile.dart';
 
 class DailyNews extends StatelessWidget {
   const DailyNews({super.key});
@@ -11,71 +13,60 @@ class DailyNews extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: _buildAppbar(context),
       body: _buildBody(),
     );
   }
 
-  _buildAppBar() {
+  _buildAppbar(BuildContext context) {
     return AppBar(
       title: const Text(
         'Daily News',
-        style: TextStyle(
-          color: Colors.black,
-        ),
+        style: TextStyle(color: Colors.black),
       ),
+      actions: [
+        GestureDetector(
+          onTap: () => _onShowSavedArticlesViewTapped(context),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            child: Icon(Icons.bookmark, color: Colors.black),
+          ),
+        ),
+      ],
     );
   }
 
   _buildBody() {
     return BlocBuilder<RemoteArticleBloc, RemoteArticleState>(
-        builder: (context, state) {
-      if (state is RemoteArticleLoading) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      }
-      if (state is RemoteArticleSuccess) {
-        return ListView.separated(
-          separatorBuilder: (context, _) => const Divider(
-            color: Colors.grey,
-          ),
-          itemCount: state.articles?.length ?? 0,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(state.articles?[index].title ?? ""),
-              subtitle: Text(state.articles?[index].description ?? ""),
-              minLeadingWidth: 100,
-              leading: SizedBox(
-                width: 100,
-                height: 100,
-                child: CachedNetworkImage(
-                  imageUrl: state.articles?[index].urlToImage ?? "",
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) {
-                    return const Center(
-                      child: Text("Resim Yüklenemedi"),
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      } else if (state is RemoteArticleError) {
-        return Center(
-          child: Text(state.error?.message ?? ""),
-        );
-      } else {
-        return const Center(
-          child: Text(
-            "Something went wrong!",
-            style: TextStyle(
-              color: Colors.red,
-            ),
-          ),
-        );
-      }
-    });
+      builder: (_, state) {
+        if (state is RemoteArticleLoading) {
+          return const Center(child: CupertinoActivityIndicator());
+        }
+        if (state is RemoteArticleError) {
+          return const Center(child: Icon(Icons.refresh));
+        }
+        if (state is RemoteArticleSuccess) {
+          return ListView.builder(
+            itemBuilder: (context, index) {
+              return ArticleWidget(
+                article: state.articles![index],
+                onArticlePressed: (article) =>
+                    _onArticlePressed(context, article),
+              );
+            },
+            itemCount: state.articles!.length,
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  void _onArticlePressed(BuildContext context, ArticleEntity article) {
+    Navigator.pushNamed(context, '/ArticleDetails', arguments: article);
+  }
+
+  void _onShowSavedArticlesViewTapped(BuildContext context) {
+    Navigator.pushNamed(context, '/SavedArticles');
   }
 }

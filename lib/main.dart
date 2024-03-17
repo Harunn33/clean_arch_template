@@ -1,3 +1,4 @@
+import 'package:clean_arch_template/config/routes/routes.dart';
 import 'package:clean_arch_template/config/theme/app_theme.dart';
 import 'package:clean_arch_template/di.dart';
 import 'package:clean_arch_template/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await DependencyInjection().init();
   runApp(const MyApp());
 }
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         theme: appTheme(),
         debugShowCheckedModeBanner: false,
+        onGenerateRoute: AppRoutes.onGenerateRoutes,
         home: const DailyNews(),
       ),
     );
